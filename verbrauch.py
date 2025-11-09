@@ -3,25 +3,30 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
-# 📁 Dateiname für Speicherung
+# 📁 Dateiname für Speicherung (lokal im App-Verzeichnis)
 filename = "verbrauchsdaten.csv"
 
 # 📅 Kategorien und Monate
 categories = ["Wasser", "Warmwasser", "Heizung"]
 months = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
 
-# 📥 Daten laden oder neu erstellen
-if os.path.exists(filename):
+st.title("💧🔥 Verbrauchsmonitor")
+
+# 📥 Upload-Funktion für Handy-Dateien
+uploaded_file = st.file_uploader("📂 Verbrauchsdaten vom Handy hochladen (CSV)", type="csv")
+
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file, index_col=0)
+    st.success("✅ Verbrauchsdaten vom Handy geladen.")
+elif os.path.exists(filename):
     df = pd.read_csv(filename, index_col=0)
-    st.success("✅ Vorhandene Verbrauchsdaten geladen.")
+    st.success("✅ Lokale Verbrauchsdaten geladen.")
 else:
     df = pd.DataFrame({category: [0.0]*12 for category in categories}, index=months)
     st.info("ℹ️ Keine gespeicherten Daten gefunden. Neue Tabelle erstellt.")
 
 # 🖊️ Eingabeformular
-st.title("💧🔥 Verbrauchsmonitor")
 st.subheader("📥 Verbrauchswerte eingeben oder bearbeiten")
-
 for category in categories:
     st.markdown(f"**{category}**")
     for month in months:
@@ -61,3 +66,4 @@ ax.set_ylabel("Verbrauch (m³ oder kWh)")
 ax.legend()
 ax.grid(True)
 st.pyplot(fig)
+
