@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
-# 📁 Dateiname für Speicherung (lokal im App-Verzeichnis)
+# 📁 Dateiname für Speicherung
 filename = "verbrauchsdaten.csv"
 
 # 📅 Kategorien und Monate
@@ -12,15 +12,18 @@ months = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt",
 
 st.title("💧🔥 Verbrauchsmonitor")
 
-# 📥 Upload-Funktion für Handy-Dateien
-uploaded_file = st.file_uploader("📂 Verbrauchsdaten vom Handy hochladen (CSV)", type="csv")
-
-if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file, index_col=0)
-    st.success("✅ Verbrauchsdaten vom Handy geladen.")
-elif os.path.exists(filename):
-    df = pd.read_csv(filename, index_col=0)
-    st.success("✅ Lokale Verbrauchsdaten geladen.")
+# 📥 Daten laden oder neu erstellen
+if os.path.exists(filename):
+    try:
+        df = pd.read_csv(filename)
+        # Sicherstellen, dass die Monats-Spalte existiert
+        if "Monat" not in df.columns:
+            df.insert(0, "Monat", months)
+        df.set_index("Monat", inplace=True)
+        st.success("✅ Verbrauchsdaten geladen.")
+    except Exception as e:
+        st.error(f"Fehler beim Laden: {e}")
+        df = pd.DataFrame({category: [0.0]*12 for category in categories}, index=months)
 else:
     df = pd.DataFrame({category: [0.0]*12 for category in categories}, index=months)
     st.info("ℹ️ Keine gespeicherten Daten gefunden. Neue Tabelle erstellt.")
@@ -37,13 +40,14 @@ for category in categories:
 
 # 💾 Speichern
 if st.button("💾 Daten speichern"):
-    df.to_csv(filename)
+    # Monatsnamen als Spalte speichern, nicht nur als Index
+    df.reset_index().to_csv(filename, index=False)
     st.success("Daten erfolgreich gespeichert!")
 
 # 📤 CSV-Download
 st.download_button(
     label="📥 Verbrauchsdaten als CSV herunterladen",
-    data=df.to_csv().encode('utf-8'),
+    data=df.reset_index().to_csv(index=False).encode('utf-8'),
     file_name='verbrauchsdaten.csv',
     mime='text/csv'
 )
